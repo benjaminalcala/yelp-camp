@@ -19,9 +19,11 @@ const createName = arr => {
 const seedFunction = async () => {
   await Campground.deleteMany({});
   for (let i = 0; i < 50; i++){
+    let price = Math.floor(Math.random() * 20) + 10;
     let index = Math.floor(Math.random() * 1000);
     let title = `${createName(descriptors)} ${createName(places)}`;
-    let campground = new Campground({location: `${cities[index].city}, ${cities[index].state}`, title})
+    let campground = new Campground({location: `${cities[index].city}, ${cities[index].state}`, title, price, 
+    image: 'https://source.unsplash.com/collection/483251', description: 'A beautiful place to camp, you can either camp in a tent or in one of the beautiful log cabins'})
     await campground.save()
   }
 
