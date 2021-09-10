@@ -7,9 +7,10 @@ const ejsMate = require('ejs-mate');
 const Joi = require('joi');
 
 const Campground = require('./models/campgrounds');
+const Review = require('./models/reviews');
 const ExpressError = require('./utils/ExpressError');
 const asyncCatch = require('./utils/asyncCatch');
-const {campgroundSchema} = require('./schemas');
+const {campgroundSchema, reviewSchema} = require('./schemas');
 
 mongoose.connect('mongodb://localhost:27017/yelp-camp', {useNewUrlParser: true})
 .then(()=> {
@@ -39,6 +40,17 @@ const validateCampground = (req, res, next) => {
   }
 }
 
+const validateReview = (req, res, next) => {
+  const {error} = reviewSchema.validate(req.body);
+  if(error){
+    const msg = error.details.map(el => el.message).join(',');
+    throw new ExpressError(400, msg)
+  }else{
+    next()
+  }
+
+}
+
 app.get('/', (req, res) => {
   res.send('Home Page')
 })
@@ -55,7 +67,7 @@ app.get('/campgrounds/new', (req, res) => {
 
 app.get('/campgrounds/:id', asyncCatch(async (req, res) => {
   const {id} = req.params;
-  const campground = await Campground.findById(id);
+  const campground = await Campground.findById(id).populate('reviews');
   res.render('campground/details', {campground})
 }))
 
@@ -83,6 +95,26 @@ app.delete('/campgrounds/:id', asyncCatch(async (req, res) => {
   const {id} = req.params;
   await Campground.findByIdAndDelete(id);
   res.redirect('/campgrounds');
+}))
+
+app.delete('/campgrounds/:id/reviews/:reviewId', asyncCatch(async (req, res) => {
+  const {id, reviewId} = req.params;
+  await Review.findByIdAndDelete(reviewId);
+  await Campground.findByIdAndUpdate(id, {$pull:{reviews: reviewId}})
+  res.redirect(`/campgrounds/${id}`);
+  
+}))
+
+
+app.post('/campgrounds/:id/reviews', validateReview, asyncCatch(async (req, res) => {
+  const campground = await Campground.findById(req.params.id);
+  const review = new Review(req.body.review);
+  campground.reviews.push(review);
+  await campground.save()
+  await review.save()
+  console.log(campground);
+  res.redirect(`/campgrounds/${campground._id}`)
+
 }))
 
 app.all('*', (req, res, next) => {
