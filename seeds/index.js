@@ -22,7 +22,8 @@ const seedFunction = async () => {
     let price = Math.floor(Math.random() * 20) + 10;
     let index = Math.floor(Math.random() * 1000);
     let title = `${createName(descriptors)} ${createName(places)}`;
-    let campground = new Campground({location: `${cities[index].city}, ${cities[index].state}`, title, price, 
+    let author = '6152722eee69423806d0cd3c'
+    let campground = new Campground({location: `${cities[index].city}, ${cities[index].state}`, title, price, author,
     image: 'https://source.unsplash.com/collection/483251', description: 'A beautiful place to camp, you can either camp in a tent or in one of the beautiful log cabins'})
     await campground.save()
   }
